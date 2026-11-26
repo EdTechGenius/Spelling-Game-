@@ -1,7 +1,8 @@
 import { h, mount, toast, confetti, modal } from '../ui.js';
-import { store, profile, zone as zoneProgress, notebookAll, notebookEntry, buyItem, saveProfile, signOut } from '../store.js';
+import { store, profile, classFor, refreshClasses, zone as zoneProgress, notebookAll, notebookEntry, buyItem, saveProfile, signOut } from '../store.js';
 import { WORLDS, BASE_CAMP, findZone, patternSpan } from '../worlds.js';
 import { info } from '../data/details.js';
+import { RULES, shortRule } from '../data/rules.js';
 import { speak } from '../speech.js';
 import { avatarThumbnail, SHOP, DEFAULT_AVATAR } from '../avatar.js';
 import { CHECK_DELAY_DAYS } from '../config.js';
@@ -45,7 +46,12 @@ export function dueForCheck(zoneKey) {
     ((e.status === 'pending' && new Date(e.passedAt).getTime() <= cutoff) || e.status === 'tricky'));
 }
 
-function isUnlocked(world, z) {
+// Zones in a student's own year are opened by their teacher for the whole class.
+// Teachers, guests and students without a class unlock zones by earning a star in the one before.
+export function isUnlocked(world, z) {
+  const cls = classFor(world.year);
+  if (cls) return (cls.open_zones || []).includes(z.key);
+  if (profile().role === 'teacher') return true;
   if (z.num === 1) return true;
   const prev = world.zones[z.num - 2];
   return zoneProgress(prev.key).stars >= 1;
@@ -80,9 +86,11 @@ export function worldsScreen() {
 
 // ───────── world map ─────────
 
-export function worldScreen(year) {
+export function worldScreen(year, refreshed = false) {
   const w = WORLDS[year];
   if (!w) return go('/');
+  const cls = classFor(year);
+  if (!refreshed) refreshClasses().then((changed) => { if (changed && location.hash === `#/world/${year}`) worldScreen(year, true); });
   const cols = 6;
   const nodes = w.zones.map((z, i) => {
     const row = Math.floor(i / cols);
@@ -90,7 +98,7 @@ export function worldScreen(year) {
     return { z, x: 8 + col * (84 / (cols - 1)), y: 14 + row * 33 };
   });
   const firstLocked = w.zones.find((z) => !isUnlocked(w, z));
-  const current = w.zones.find((z) => isUnlocked(w, z) && zoneProgress(z.key).stars === 0);
+  const current = cls ? w.zones.find((z) => z.key === cls.current_zone) : w.zones.find((z) => isUnlocked(w, z) && zoneProgress(z.key).stars === 0);
 
   const map = h('div', { class: 'map', style: { '--sky': w.theme.sky, '--ground': w.theme.ground, '--ground2': w.theme.ground2, '--path': w.theme.path, '--accent': w.theme.accent } });
   const svgNS = 'http://www.w3.org/2000/svg';
@@ -113,8 +121,9 @@ export function worldScreen(year) {
     map.append(h('button', {
       class: `node ${open ? '' : 'locked'} ${z === current ? 'current' : ''} ${prog.stars ? 'done' : ''}`,
       style: { left: x + '%', top: y + '%' },
-      onclick: () => open ? go(`/zone/${z.key}`) : toast('Get at least 1 star in the zone before to unlock this one 🔒'),
+      onclick: () => open ? go(`/zone/${z.key}`) : toast(cls ? 'Your teacher will unlock this zone soon 🔒' : 'Get at least 1 star in the zone before to unlock this one 🔒'),
     },
+    cls && z === current && h('span', { class: 'week-badge' }, '⭐ This week'),
     h('span', { class: 'node-tile' }, open ? z.num : '🔒'),
     h('span', { class: 'node-name' }, z.name),
     h('span', { class: 'node-stars' }, open ? starsText(prog.stars) : '')));
@@ -153,7 +162,10 @@ export function zoneScreen(key) {
   const found = findZone(key);
   if (!found) return go('/');
   const { zone: z, world: w, kind } = found;
+  if (kind === 'zone' && !isUnlocked(w, z)) { toast('This zone is still locked 🔒'); return go(`/world/${w.year}`); }
   const prog = zoneProgress(key);
+  // Every zone starts with its spelling-rule introduction (no skipping)
+  if (!prog.intro) { location.replace(`#/intro/${key}`); return; }
   const due = dueForCheck(key).length;
   const waiting = notebookAll().filter((e) => e.zone === key && e.status === 'pending').length - dueForCheck(key).filter((e) => e.status === 'pending').length;
   const back = kind === 'zone' ? `/world/${w.year}` : kind === 'expedition' ? `/list/expedition/${w.year}` : '/list/basecamp/0';
@@ -168,6 +180,7 @@ export function zoneScreen(key) {
       h('div', { class: 'zone-head' },
         h('div', { class: 'zone-num' }, kind === 'basecamp' ? '🏕️' : kind === 'expedition' ? '⭐' : z.num),
         h('div', {}, h('h2', {}, z.name), h('div', { class: 'pattern-tag' }, kind === 'zone' ? `Spelling focus: ${z.title}` : z.title)),
+        h('button', { class: 'btn btn-small btn-ghost rule-replay', onclick: () => go(`/intro/${key}`) }, '📜 Spelling rule'),
         h('div', { class: 'zone-stars' }, starsText(prog.stars))),
       h('div', { class: 'steps' },
         step(1, '📖', 'Learn', 'Hear, see and try each word', prog.learn ? '✔ done' : '', () => go(`/learn/${key}`), prog.learn ? 'complete' : ''),
@@ -200,6 +213,7 @@ export function wordCard(it, z) {
       h('button', { class: 'btn btn-small', onclick: () => speak(it.w) }, '🔊 Say it'),
       h('button', { class: 'btn btn-small btn-ghost', onclick: () => speak(it.w, { slow: true }) }, '🐢 Slowly')),
     it.hint && h('p', { class: 'hint' }, it.hint.startsWith('plural') ? it.hint : `Short for “${it.hint}”`),
+    RULES[z.key] && h('p', { class: 'wc-rule' }, '📜 ', h('b', {}, 'Rule: '), shortRule(RULES[z.key].rule)),
     d ? h('div', {},
       h('h4', {}, '📘 Meaning'), h('p', { class: 'wc-text' }, d.meaning),
       h('h4', {}, '💬 In a sentence'), h('p', { class: 'wc-text sentence' }, d.sentence,

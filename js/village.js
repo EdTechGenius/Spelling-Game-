@@ -310,7 +310,8 @@ export function createVillageView(container, { world, owned, avatar, onPick }) {
   if (avatar) {
     me = buildAvatar(avatar);
     me.scale.setScalar(0.17);
-    me.position.set(world.avatarPos[0], 16 * 0.17, world.avatarPos[1]);
+    me.position.set(world.avatarPos[0], 0, world.avatarPos[1]); // feet on the ground
+    me.traverse((o) => { if (o.isMesh) o.castShadow = true; });
     me.rotation.y = 0.6;
     scene.add(me);
   }
@@ -364,7 +365,7 @@ export function createVillageView(container, { world, owned, avatar, onPick }) {
         if (k >= 1) { g.scale.setScalar(1); delete g.userData.popStart; }
       }
     }
-    if (me) me.position.y = 16 * 0.17 + Math.abs(Math.sin(t * 1.5)) * 0.15;
+    if (me) me.rotation.y = 0.6 + Math.sin(t * 0.5) * 0.35; // look around gently
     controls.update();
     renderer.render(scene, camera);
   }

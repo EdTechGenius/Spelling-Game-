@@ -7,13 +7,13 @@ function pickVoice() {
   const gb = voices.filter((v) => v.lang && v.lang.replace('_', '-').toLowerCase().startsWith('en-gb'));
   voice = PREFERRED.map((n) => gb.find((v) => v.name.includes(n))).find(Boolean) || gb[0] || voices.find((v) => v.lang?.startsWith('en')) || null;
 }
-if ('speechSynthesis' in window) {
+if (window.speechSynthesis) {
   pickVoice();
   speechSynthesis.onvoiceschanged = pickVoice;
 }
 
 export function speak(text, { slow = false } = {}) {
-  if (!('speechSynthesis' in window) || !text) return Promise.resolve();
+  if (!window.speechSynthesis || !text) return Promise.resolve();
   speechSynthesis.cancel();
   return new Promise((resolve) => {
     const u = new SpeechSynthesisUtterance(text);
