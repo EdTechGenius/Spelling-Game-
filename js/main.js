@@ -3,6 +3,7 @@ import { welcomeScreen, joinScreen, avatarScreen } from './screens/start.js';
 import { worldsScreen, worldScreen, zoneScreen, listScreen, notebookScreen, shopScreen } from './screens/map.js';
 import { learnScreen, practiseScreen, challengeScreen, checkScreen } from './screens/play.js';
 import { teacherScreen } from './screens/teacher.js';
+import { villageScreen } from './screens/village.js';
 
 let cleanup = null;
 export function onLeave(fn) { cleanup = fn; }
@@ -38,6 +39,7 @@ function route() {
     case 'check': return checkScreen(a);
     case 'notebook': return notebookScreen();
     case 'shop': return shopScreen(Number(a));
+    case 'village': return villageScreen();
     default: return worldsScreen();
   }
 }

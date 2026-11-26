@@ -130,6 +130,7 @@ export function worldScreen(year) {
       h('div', { class: 'side-places' },
         h('button', { class: 'place', onclick: () => go(`/list/expedition/${year}`) }, h('span', {}, '⭐'), h('b', {}, 'Expedition'), h('small', {}, 'Statutory words')),
         h('button', { class: 'place', onclick: () => go('/list/basecamp/0') }, h('span', {}, '🏕️'), h('b', {}, 'Base Camp'), h('small', {}, '200 everyday words')),
+        year === 4 && h('button', { class: 'place place-feature', onclick: () => go('/village') }, h('span', {}, '🛖'), h('b', {}, 'My Village'), h('small', {}, 'Build through the ages')),
         h('button', { class: 'place', onclick: () => go(`/shop/${year}`) }, h('span', {}, SHOP[year].icon), h('b', {}, SHOP[year].name), h('small', {}, 'Spend your gems')),
         h('button', { class: 'place', onclick: () => go('/notebook') }, h('span', {}, '📓'), h('b', {}, 'My notebook'), h('small', {}, due ? `${due} words to check!` : 'Words I can spell')),
       )));
