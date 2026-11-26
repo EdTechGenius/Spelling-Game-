@@ -39,7 +39,7 @@ function route() {
     case 'check': return checkScreen(a);
     case 'notebook': return notebookScreen();
     case 'shop': return shopScreen(Number(a));
-    case 'village': return villageScreen();
+    case 'village': return villageScreen(Number(a) || 4);
     default: return worldsScreen();
   }
 }

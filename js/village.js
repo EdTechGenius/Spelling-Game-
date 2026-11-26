@@ -6,14 +6,14 @@ import { buildAvatar } from './avatar.js';
 // ───────── Eras and buildings ─────────
 // Each era unlocks when you have built `need` buildings from the era before.
 
-export const ERAS = [
+const ERAS = [
   { id: 'old', name: 'Old Stone Age', years: 'Hunter-gatherers · before about 4000 BC in Britain', icon: '🔥', need: 0 },
   { id: 'new', name: 'New Stone Age', years: 'First farmers · about 4000–2500 BC', icon: '🌾', need: 3 },
   { id: 'bronze', name: 'Bronze Age', years: 'Metal workers · about 2500–800 BC', icon: '🥉', need: 3 },
   { id: 'iron', name: 'Iron Age', years: 'Hillforts and chariots · about 800 BC–AD 43', icon: '⚔️', need: 3 },
 ];
 
-export const BUILDINGS = [
+const BUILDINGS = [
   // Old Stone Age
   { id: 'v4-campfire', era: 'old', name: 'Campfire', icon: '🔥', cost: 10, pos: [0, 0],
     fact: 'Fire was one of the most important discoveries in human history. Early people in Britain used it to keep warm, cook their food and scare away wild animals such as wolves and bears.' },
@@ -52,30 +52,30 @@ export const BUILDINGS = [
     fact: 'Iron Age people protected their villages with hillforts — huge earth banks, deep ditches and tall wooden fences. Maiden Castle in Dorset is one of the biggest hillforts in Europe.' },
 ];
 
-export function eraUnlocked(eraIndex, owned) {
+export function eraUnlocked(world, eraIndex, owned) {
   if (eraIndex === 0) return true;
-  const prev = ERAS[eraIndex - 1];
-  const builtPrev = BUILDINGS.filter((b) => b.era === prev.id && owned.includes(b.id)).length;
-  return eraUnlocked(eraIndex - 1, owned) && builtPrev >= ERAS[eraIndex].need;
+  const prev = world.eras[eraIndex - 1];
+  const builtPrev = world.buildings.filter((x) => x.era === prev.id && owned.includes(x.id)).length;
+  return eraUnlocked(world, eraIndex - 1, owned) && builtPrev >= world.eras[eraIndex].need;
 }
 
-export function currentEra(owned) {
+export function currentEra(world, owned) {
   let idx = 0;
-  for (let i = 0; i < ERAS.length; i++) if (eraUnlocked(i, owned)) idx = i;
+  for (let i = 0; i < world.eras.length; i++) if (eraUnlocked(world, i, owned)) idx = i;
   return idx;
 }
 
 // ───────── Voxel building helpers ─────────
 
 const mats = new Map();
-const M = (c) => { if (!mats.has(c)) mats.set(c, new THREE.MeshLambertMaterial({ color: c })); return mats.get(c); };
+export const M = (c) => { if (!mats.has(c)) mats.set(c, new THREE.MeshLambertMaterial({ color: c })); return mats.get(c); };
 // box with its BOTTOM at y
-function b(g, w, h, d, c, x, y, z, ry = 0) {
+export function b(g, w, h, d, c, x, y, z, ry = 0) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), typeof c === 'string' ? M(c) : c);
   m.position.set(x, y + h / 2, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true;
   g.add(m); return m;
 }
-function cyl(g, rt, rb, h, seg, c, x, y, z) {
+export function cyl(g, rt, rb, h, seg, c, x, y, z) {
   const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), M(c));
   m.position.set(x, y + h / 2, z); m.castShadow = true; g.add(m); return m;
 }
@@ -221,7 +221,7 @@ const MODELS = {
   },
 };
 
-function scenery(scene) {
+function stoneAgeScenery(scene) {
   // ground and river
   const ground = new THREE.Mesh(new THREE.BoxGeometry(80, 2, 64), M('#8fcf6b'));
   ground.position.y = -1; ground.receiveShadow = true; scene.add(ground);
@@ -242,15 +242,22 @@ function scenery(scene) {
   }
 }
 
-function tree(g, x, z, i) {
+export function tree(g, x, z, i) {
   b(g, 0.8, 2.2 + (i % 3) * 0.4, 0.8, WOOD, x, 0, z);
   const top = i % 2 ? '#3f8f3a' : '#4f9e44';
   b(g, 3, 2, 3, top, x, 2.2, z); b(g, 2, 1.4, 2, top, x, 4.2, z);
 }
 
+export const STONE_AGE = {
+  year: 4, title: 'My Stone Age Village', icon: '🛖', prefix: 'v4-',
+  intro: 'Spend your gems to grow your camp into a village — and travel through time from the Old Stone Age to the Iron Age!',
+  eraWord: 'era', sky: '#bfe6ff', eras: ERAS, buildings: BUILDINGS, models: MODELS,
+  scenery: stoneAgeScenery, avatarPos: [2.6, 2.6], noMarker: ['v4-hillfort'],
+};
+
 // ───────── The live scene ─────────
 
-export function createVillageView(container, { owned, avatar, onPick }) {
+export function createVillageView(container, { world, owned, avatar, onPick }) {
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -259,8 +266,8 @@ export function createVillageView(container, { owned, avatar, onPick }) {
   container.append(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#bfe6ff');
-  scene.fog = new THREE.Fog('#bfe6ff', 70, 130);
+  scene.background = new THREE.Color(world.sky);
+  scene.fog = new THREE.Fog(world.sky, 70, 130);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x6b8f4e, 1.3));
   const sun = new THREE.DirectionalLight(0xfff1d6, 1.6);
   sun.position.set(25, 40, 20); sun.castShadow = true;
@@ -277,31 +284,31 @@ export function createVillageView(container, { owned, avatar, onPick }) {
   controls.minDistance = 18; controls.maxDistance = 85;
   controls.enablePan = false;
 
-  scenery(scene);
+  world.scenery(scene);
 
   const builds = new Map(); // id -> group
   const anims = [];
   function addBuilding(id, pop = false) {
-    const def = BUILDINGS.find((x) => x.id === id);
-    if (!def || builds.has(id) || !MODELS[id]) return;
+    const def = world.buildings.find((x) => x.id === id);
+    if (!def || builds.has(id) || !world.models[id]) return;
     const g = new THREE.Group();
     g.position.set(def.pos[0], 0, def.pos[1]);
     const local = [];
-    MODELS[id](g, local);
+    world.models[id](g, local);
     g.traverse((o) => { o.userData.buildingId = id; });
     scene.add(g);
     builds.set(id, g);
     local.forEach((fn) => anims.push(fn));
     if (pop) { g.scale.setScalar(0.01); g.userData.popStart = performance.now(); }
   }
-  owned.filter((id) => id.startsWith('v4-')).forEach((id) => addBuilding(id));
+  owned.filter((id) => id.startsWith(world.prefix)).forEach((id) => addBuilding(id));
 
   // the student's explorer stands by the campfire
   let me = null;
   if (avatar) {
     me = buildAvatar(avatar);
     me.scale.setScalar(0.17);
-    me.position.set(2.6, 16 * 0.17, 2.6);
+    me.position.set(world.avatarPos[0], 16 * 0.17, world.avatarPos[1]);
     me.rotation.y = 0.6;
     scene.add(me);
   }
@@ -311,7 +318,7 @@ export function createVillageView(container, { owned, avatar, onPick }) {
   function drawMarkers(available) {
     markers.clear();
     for (const def of available) {
-      if (def.id === 'v4-hillfort') continue;
+      if ((world.noMarker || []).includes(def.id)) continue;
       const m = new THREE.Group(); m.position.set(def.pos[0], 0, def.pos[1]);
       for (const [x, z] of [[-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]]) b(m, 0.2, 1, 0.2, '#e8d6a8', x, 0, z);
       b(m, 3.2, 0.08, 0.08, '#f2f2f2', 0, 0.8, -1.5); b(m, 3.2, 0.08, 0.08, '#f2f2f2', 0, 0.8, 1.5);
@@ -365,7 +372,7 @@ export function createVillageView(container, { owned, avatar, onPick }) {
     build(id) { addBuilding(id, true); },
     markers: drawMarkers,
     focus(id) {
-      const def = BUILDINGS.find((x) => x.id === id);
+      const def = world.buildings.find((x) => x.id === id);
       if (def) controls.target.set(def.pos[0] * 0.5, 0, def.pos[1] * 0.5);
     },
     dispose() { cancelAnimationFrame(raf); ro.disconnect(); controls.dispose(); renderer.dispose(); renderer.domElement.remove(); },
