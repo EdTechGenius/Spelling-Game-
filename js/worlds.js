@@ -18,7 +18,7 @@ export const WORLDS = {
   6: {
     year: 6, name: 'Volcano Depths', short: 'Volcano', icon: '🌋',
     blurb: 'Volcanoes, sky islands and caves. Mine gems and build your secret underground lair!',
-    theme: { sky: '#3a2f4f', ground: '#5b4a5e', ground2: '#4a3b4d', path: '#d8743a', accent: '#ff7b2e' },
+    theme: { panel: '#ffe9db', sky: '#3a2f4f', ground: '#5b4a5e', ground2: '#4a3b4d', path: '#d8743a', accent: '#ff7b2e' },
     zones: LISTS.y6, expedition: LISTS.s56,
     deco: ['🌋', '💎', '🪨', '🔥', '⛰️', '🦇', '💎', '🪨', '🌋', '🔥'],
   },
@@ -82,23 +82,72 @@ export function misspellings(word, zone, n = 2) {
   return [...patternBased.sort(() => Math.random() - 0.5), ...rest].slice(0, n);
 }
 
-// For "Missing Letters": blank out the pattern (or a tricky chunk) and give choices
-export function missingChallenge(word, zone) {
+// ───────── Missing Pieces ─────────
+// Hides a different "tricky bit" each round: the zone's pattern, a word ending,
+// a vowel sound or a double letter — each with believable wrong choices.
+
+const VOWEL_ALTS = {
+  a: ['e', 'u', 'o'], e: ['a', 'i', 'u'], i: ['e', 'y', 'a'], o: ['a', 'u', 'e'], u: ['o', 'a', 'oo'], y: ['i', 'ie', 'ey'],
+  ea: ['ee', 'e', 'ae'], ee: ['ea', 'e', 'ie'], ie: ['ei', 'ee', 'y'], ei: ['ie', 'ee', 'ai'], ou: ['ow', 'o', 'u'],
+  ai: ['ay', 'a', 'ei'], oa: ['o', 'ow', 'oe'], au: ['or', 'aw', 'o'], oo: ['u', 'ou', 'o'], io: ['eo', 'o', 'iou'],
+  ia: ['ea', 'a', 'ya'], ue: ['ew', 'u', 'oo'], ay: ['ai', 'a', 'ey'], ey: ['y', 'ee', 'ay'], oi: ['oy', 'oe', 'i'],
+};
+const ENDINGS = [
+  ['ssion', ['tion', 'sion']], ['tion', ['sion', 'shun']], ['sion', ['tion', 'shun']], ['cian', ['tion', 'shun']],
+  ['ious', ['eous', 'ous']], ['eous', ['ious', 'us']], ['ous', ['us', 'ious']], ['able', ['ible', 'abel']], ['ible', ['able', 'ibel']],
+  ['ary', ['ery', 'ory']], ['ery', ['ary', 'ory']], ['ory', ['ary', 'ery']], ['ment', ['mant', 'mint']], ['ence', ['ance', 'ense']],
+  ['ance', ['ence', 'anse']], ['ent', ['ant', 'int']], ['ant', ['ent', 'int']], ['ally', ['ly', 'aly']], ['ily', ['ly', 'ely']],
+  ['ly', ['ley', 'lly']], ['ful', ['full', 'fel']], ['less', ['les', 'lis']], ['ness', ['nes', 'niss']], ['ture', ['cher', 'chure']],
+  ['ure', ['er', 'or']], ['our', ['or', 'ur']], ['ist', ['est', 'ast']], ['ise', ['ize', 'ice']], ['ate', ['ait', 'et']],
+  ['ive', ['iv', 'eve']], ['ic', ['ick', 'ik']], ['al', ['el', 'le']], ['le', ['el', 'al']], ['el', ['le', 'al']], ['et', ['it', 'ett']],
+  ['ing', ['in', 'eing']], ['ed', ['d', 't']], ['er', ['a', 'or']], ['or', ['er', 'our']], ['dge', ['ge', 'j']], ['ge', ['dge', 'j']],
+];
+const DOUBLE_ALTS = { ss: ['s', 'c'], ll: ['l', 'le'], cc: ['c', 'ck'], ff: ['f', 'ph'], mm: ['m', 'mb'], pp: ['p', 'b'], rr: ['r', 'wr'],
+  tt: ['t', 'd'], nn: ['n', 'kn'], dd: ['d', 't'], gg: ['g', 'dg'], bb: ['b', 'p'], zz: ['z', 's'] };
+
+function candidates(word, zone) {
+  const w = word.toLowerCase();
+  const out = [];
+  const add = (kind, start, end, alts) => {
+    const answer = word.slice(start, end);
+    const choices = [...new Set([answer, ...alts.filter((a) => a !== answer)])].slice(0, 3);
+    if (choices.length >= 2 && start >= 0 && end > start) out.push({ kind, start, end, answer, choices });
+  };
   const span = patternSpan(word, zone.pattern);
-  if (span && zone.confuse?.length >= 2) {
-    const answer = word.slice(span[0], span[1]);
-    const choices = new Set([answer]);
-    for (const c of zone.confuse) { if (choices.size >= 3) break; if (c !== answer && c !== '') choices.add(c); }
-    if (choices.size >= 2) return { before: word.slice(0, span[0]), after: word.slice(span[1]), answer, choices: [...choices] };
+  if (span && zone.confuse?.length >= 2) add('pattern', span[0], span[1], zone.confuse);
+  const overlapsPattern = (st, en) => span && st < span[1] && en > span[0];
+  const addOther = (kind, st, en, alts) => { if (!overlapsPattern(st, en)) add(kind, st, en, alts); };
+  for (const [end, alts] of ENDINGS) {
+    if (w.endsWith(end) && w.length > end.length + 1) { addOther('ending', w.length - end.length, w.length, alts); break; }
   }
-  // fallback: hide 2 letters from the middle, choices are letter pairs
-  const letters = word.replace(/[^a-z]/gi, '');
-  if (letters.length < 4) return null;
-  const start = 1 + Math.floor(Math.random() * Math.max(1, word.length - 3));
-  const answer = word.slice(start, start + 2);
-  if (/[^a-z]/i.test(answer)) return null;
-  const choices = new Set([answer]);
-  const swaps = [answer[1] + answer[0], answer[0] + answer[0], answer[0] + 'e', 'i' + answer[1], answer[0] + 'a'];
-  for (const s of swaps) { if (choices.size >= 3) break; if (s !== answer) choices.add(s); }
-  return { before: word.slice(0, start), after: word.slice(start + 2), answer, choices: [...choices] };
+  const dbl = /([b-df-hj-np-tv-z])\1/g;
+  let m;
+  while ((m = dbl.exec(w))) if (DOUBLE_ALTS[m[0]]) addOther('double', m.index, m.index + 2, DOUBLE_ALTS[m[0]]);
+  const vow = /[aeiouy]+/g;
+  while ((m = vow.exec(w))) {
+    if (m.index === 0 && m[0].length === w.length) continue;
+    const v = m[0].length <= 3 ? m[0] : null;
+    const alts = v && (VOWEL_ALTS[v] || (v.length === 1 ? null : VOWEL_ALTS[v[0]]?.map((x) => x + v.slice(1))));
+    if (alts && m.index > 0) addOther('vowel', m.index, m.index + m[0].length, alts);
+  }
+  return out;
+}
+
+export function missingChallenge(word, zone, round = 0) {
+  if (!/^[a-z' -]+$/i.test(word) || word.length < 3) return null;
+  const all = candidates(word, zone);
+  if (!all.length) return null;
+  // rotate through kinds so the answer isn't the same pattern every time
+  // the zone's pattern on every third round; other rounds hide a different tricky bit
+  const others = ['vowel', 'ending', 'double'];
+  const r = Math.floor(round / 3) + round;
+  const rotated = round % 3 === 0 ? ['pattern', ...others] : [...others.slice(r % 3), ...others.slice(0, r % 3), 'pattern'];
+  for (const kind of rotated) {
+    const opts = all.filter((c) => c.kind === kind);
+    if (opts.length) {
+      const c = opts[Math.floor(Math.random() * opts.length)];
+      return { before: word.slice(0, c.start), after: word.slice(c.end), answer: c.answer, choices: c.choices, kind };
+    }
+  }
+  return null;
 }

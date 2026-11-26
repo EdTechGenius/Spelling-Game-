@@ -26,12 +26,15 @@ export function speak(text, { slow = false } = {}) {
   });
 }
 
+import { info } from './data/details.js';
+
 // Dictation style: word … sentence … word
-export function dictate(item, details, opts = {}) {
-  const d = details[item.w] || details[item.w.toLowerCase()];
+export function dictate(item, opts = {}) {
+  if (!item || !item.w) return Promise.resolve();
+  const d = info(item.w);
   const parts = [item.w];
   if (item.hint) parts.push(item.hint.startsWith('plural') ? item.hint : `short for ${item.hint}`);
-  if (d && d[1]) parts.push(d[1]);
+  if (d && d.sentence) parts.push(d.sentence);
   parts.push(item.w);
   return speak(parts.join('. … '), opts);
 }
