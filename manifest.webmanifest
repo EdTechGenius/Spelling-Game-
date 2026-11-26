@@ -1,0 +1,10 @@
+{
+  "name": "Spell Quests",
+  "short_name": "Spell Quests",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff8ec",
+  "theme_color": "#2f8fdd",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
