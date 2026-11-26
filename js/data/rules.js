@@ -13,7 +13,7 @@ export const RULES = {
   },
   'y4-02': {
     rule: 'When **ci** comes before another vowel, it often makes a "sh" sound: spe**ci**al, musi**ci**an, pre**ci**ous.',
-    spot: 'Listen for "sh" in these endings: **-cial** (social), **-cious** (suspicious), **-cient** (ancient) and **-cian** (optician). Words ending in -cian are often jobs!',
+    spot: 'Listen for "sh" in these word endings: **-cial** (social), **-cious** (suspicious), **-cient** (ancient) and **-cian** (optician). Words ending in -cian are often jobs!',
     watch: 'The "sh" sound has other spellings too: na**ti**on, mi**ssi**on, **sh**ip. **Circle** is the odd one out here — its ci says "s", as in "sir".',
     q: ['Which job is spelt correctly?', ['musition', 'musician', 'musishan'], 'musician'],
   },
@@ -24,8 +24,8 @@ export const RULES = {
     q: ['Which spelling is correct?', ['exellent', 'excellent', 'eccellent'], 'excellent'],
   },
   'y4-04': {
-    rule: 'The ending **-ious** makes describing words (adjectives). It can sound like "ee-us" (furious) or "shus" (delicious).',
-    spot: 'Many -ious words come from nouns: myster**y** → myster**ious**, glor**y** → glor**ious** — the y changes to i. If you hear "ee-us" or "shus" at the end of a describing word, try -ious.',
+    rule: 'The suffix **-ious** makes **adjectives** (words that describe nouns). It can sound like "ee-us" (furious) or "shus" (delicious).',
+    spot: 'Many -ious words come from nouns: myster**y** → myster**ious**, glor**y** → glor**ious** — the y changes to i. If you hear "ee-us" or "shus" at the end of an adjective, try -ious.',
     watch: 'Some words end in plain **-ous**: famous, nervous, enormous. A few use **-eous**: gorgeous, courageous.',
     q: ['Which spelling is correct?', ['mysterius', 'misterious', 'mysterious'], 'mysterious'],
   },
@@ -67,12 +67,12 @@ export const RULES = {
   },
   'y4-11': {
     rule: 'The prefix **un-** means "not" or "the opposite of". Just add it to the front: **un** + usual = **un**usual.',
-    spot: 'un- is the most common "not" prefix, and it works with lots of describing words: **un**able, **un**aware, **un**pleasant, **un**popular.',
+    spot: 'un- is the most common "not" prefix, and it works with lots of adjectives: **un**able, **un**aware, **un**pleasant, **un**popular.',
     watch: 'Keep the whole root word: **un** + conscious = **un**conscious. If the root starts with n, you get a double n: **un** + necessary = u**nn**ecessary.',
     q: ['Which spelling is correct?', ['unusal', 'unusual', 'ununsual'], 'unusual'],
   },
   'y4-12': {
-    rule: 'Many nouns and describing words end in **-ary**: libr**ary**, diction**ary**, ordin**ary**, Janu**ary**.',
+    rule: 'Many nouns and adjectives end in the suffix **-ary**: libr**ary**, diction**ary**, ordin**ary**, Janu**ary**.',
     spot: 'Listen for an "airy" or "ree" sound at the end of the word: necess**ary**, imagin**ary**, vocabul**ary**.',
     watch: '-ery and -ory sound similar (bakery, history). Say the word slowly so you hear every r: lib-**r**ar-y, Feb-**r**u-ar-y — people often forget the first r!',
     q: ['Which spelling is correct?', ['libary', 'library', 'librery'], 'library'],
@@ -85,12 +85,12 @@ export const RULES = {
   },
   'y4-14': {
     rule: '**-ible** also means "can be" (vis**ible** = can be seen), but it is usually added to word parts that are NOT whole words on their own: vis + **ible**, poss + **ible**.',
-    spot: 'Take off the ending — if what is left isn\'t a real word, it is often -ible: horr**ible**, terr**ible**, leg**ible**, aud**ible**.',
+    spot: 'Take off the suffix — if what is left isn\'t a real word, it is often -ible: horr**ible**, terr**ible**, leg**ible**, aud**ible**.',
     watch: 'There are exceptions, such as flex**ible** and respons**ible**. If you are unsure, check in a dictionary.',
     q: ['Which spelling is correct?', ['terrable', 'terrible', 'terribel'], 'terrible'],
   },
   'y4-15': {
-    rule: 'Add **-ly** to a describing word to make an adverb that tells you HOW something is done: final → final**ly**.',
+    rule: 'Add the suffix **-ly** to an adjective to make an adverb that tells you HOW something is done: final → final**ly**.',
     spot: 'If the word ends in **y**, change it to i: happ**y** → happ**ily**. If it ends in **-le**, change -le to -ly: terrib**le** → terrib**ly**.',
     watch: 'Words ending in **-al** keep their l and add -ly, making a double l: fina**l** → fina**lly**, origina**l** → origina**lly**.',
     q: ['Which spelling is correct?', ['happyly', 'happily', 'hapily'], 'happily'],
@@ -141,7 +141,7 @@ export const RULES = {
   },
   'y5-05': {
     rule: 'Many words end in **-ent**, including every noun made with the suffix **-ment**: enjoy + **ment** = enjoy**ment**.',
-    spot: 'If the word is a noun made from a verb — agree → agree**ment**, improve → improve**ment** — the ending is -ment. Describing words like urg**ent** and magnific**ent** end in -ent.',
+    spot: 'If the word is a noun made from a verb — agree → agree**ment**, improve → improve**ment** — the suffix is -ment. Adjectives like urg**ent** and magnific**ent** end in -ent.',
     watch: '**-ant** sounds just the same! A tip: if there is a related word ending in **-ence**, use -ent (innoc**ence** → innoc**ent**).',
     q: ['Which spelling is correct?', ['agreemant', 'agreement', 'agrement'], 'agreement'],
   },
@@ -164,7 +164,7 @@ export const RULES = {
     q: ['Which spelling is correct?', ['siting', 'sitting', 'sittin'], 'sitting'],
   },
   'y5-09': {
-    rule: 'Adding **-ly** turns describing words into adverbs. When a word ends in **-al** or **-ful**, keep the l and add -ly, making a double l: accident**al** → accident**ally**, peace**ful** → peace**fully**.',
+    rule: 'Adding the suffix **-ly** turns adjectives into adverbs. When a word ends in **-al** or **-ful**, keep the l and add -ly, making a double l: accident**al** → accident**ally**, peace**ful** → peace**fully**.',
     spot: 'Words ending in **-ic** add **-ally**: electronic → electronic**ally**, symmetric → symmetric**ally**.',
     watch: 'People often leave out the "al": accident**al**ly, not "accidently", and coincident**al**ly, not "coincidently".',
     q: ['Which spelling is correct?', ['accidently', 'accidentally', 'accidentaly'], 'accidentally'],
@@ -232,7 +232,7 @@ export const RULES = {
     q: ['Which is the British spelling?', ['color', 'colour', 'colur'], 'colour'],
   },
   'y6-02': {
-    rule: 'The endings **-ance** and **-ence** sound the same. Words ending in **-ant** usually become **-ance** (dist**ant** → dist**ance**), and words ending in **-ent** become **-ence** (sil**ent** → sil**ence**).',
+    rule: 'The suffixes **-ance** and **-ence** sound the same. Words ending in **-ant** usually become **-ance** (dist**ant** → dist**ance**), and words ending in **-ent** become **-ence** (sil**ent** → sil**ence**).',
     spot: 'Look for a related word: appear → appear**ance**, balance; experi**ence**, audi**ence**. If you know the -ant or -ent word, use it as a clue.',
     watch: 'Some just have to be learnt: nuis**ance**, sent**ence**, sequ**ence**, circumfer**ence**.',
     q: ['Which spelling is correct?', ['silance', 'silence', 'silense'], 'silence'],
@@ -258,7 +258,7 @@ export const RULES = {
   'y6-06': {
     rule: 'When the word **all** is joined to the front of another word, it drops one l: all + so = **al**so, all + one = **al**one.',
     spot: 'If you can hear "all" at the start — **al**so, **al**one, **al**ong — it has one l. **all**owed, **all**ergy and **all**iance have a double l.',
-    watch: '**aloud** (out loud) and **allowed** (permitted) are homophones — they sound the same but mean different things!',
+    watch: '**aloud** (out loud) and **allowed** (permitted) are **homophones** — they sound the same but mean different things!',
     q: ['Which spelling is correct?', ['allso', 'also', 'alsoe'], 'also'],
   },
   'y6-07': {
@@ -304,7 +304,7 @@ export const RULES = {
     q: ['Which spelling is correct?', ['electrition', 'electrician', 'electricion'], 'electrician'],
   },
   'y6-14': {
-    rule: '**-tion** is the most common way to spell the "shun" ending. It turns verbs into nouns: act → ac**tion**, direct → direc**tion**.',
+    rule: '**-tion** is the most common way to spell the "shun" suffix. It turns verbs into nouns: act → ac**tion**, direct → direc**tion**.',
     spot: 'If the root word ends in **t** or **te**, use -tion: predict → predic**tion**, celebrat**e** → celebra**tion** (drop the e).',
     watch: 'Some words add **-ation**: inform → inform**ation**, examine → examin**ation**, multiply → multiplic**ation**.',
     q: ['Which spelling is correct?', ['celebrasion', 'celebration', 'celebrashun'], 'celebration'],
@@ -328,8 +328,8 @@ export const RULES = {
     q: ['Which spelling is correct?', ['childhud', 'childhood', 'childood'], 'childhood'],
   },
   'y6-18': {
-    rule: 'The suffix **-ic** turns nouns into describing words: volcano → volcan**ic**, hero → hero**ic**, athlete → athlet**ic**.',
-    spot: 'If a describing word ends in an "ik" sound, it is almost always **-ic** (not -ick): electr**ic**, gigant**ic**, specif**ic**.',
+    rule: 'The suffix **-ic** turns nouns into adjectives: volcano → volcan**ic**, hero → hero**ic**, athlete → athlet**ic**.',
+    spot: 'If an adjective ends in an "ik" sound, it is almost always **-ic** (not -ick): electr**ic**, gigant**ic**, specif**ic**.',
     watch: 'If the root ends in **e** or **o**, drop it: athlet**e** → athlet**ic**, volcan**o** → volcan**ic**. And metal → meta**ll**ic doubles the l.',
     q: ['Which spelling is correct?', ['electrick', 'electric', 'electrik'], 'electric'],
   },
@@ -342,7 +342,7 @@ export function genericRule(kind) {
     title: 'Everyday words',
     rule: 'These are some of the words we use most often in writing. Many of them don\'t follow the usual rules, so the best way to learn them is to **see them, say them and write them** lots of times.',
     spot: 'Look for **words inside words**: **any** in m**any**, **here** in t**here** and w**here**, **one** in d**one** and s**ome**one.',
-    watch: 'Watch out for words that sound the same but are spelt differently: **there / their / they\'re**, **to / too / two**, **where / were / wear**.',
+    watch: 'Watch out for **homophones** — words that sound the same but have different spellings and meanings: **there / their / they\'re**, **to / too / two**, **where / were / wear**.',
   };
   return {
     title: 'Expedition words',
