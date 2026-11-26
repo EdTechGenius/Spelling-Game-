@@ -252,7 +252,7 @@ export const STONE_AGE = {
   year: 4, title: 'My Stone Age Village', icon: '🛖', prefix: 'v4-',
   intro: 'Spend your gems to grow your camp into a village — and travel through time from the Old Stone Age to the Iron Age!',
   eraWord: 'era', sky: '#bfe6ff', eras: ERAS, buildings: BUILDINGS, models: MODELS,
-  scenery: stoneAgeScenery, avatarPos: [2.6, 2.6], noMarker: ['v4-hillfort'],
+  scenery: stoneAgeScenery, avatarPos: [-2.5, 4], noMarker: ['v4-hillfort'],
 };
 
 // ───────── The live scene ─────────
@@ -316,6 +316,103 @@ export function createVillageView(container, { world, owned, avatar, onPick }) {
     scene.add(me);
   }
 
+  // ───── the explorer walks around the camp, visiting the buildings ─────
+  const home = world.avatarPos;
+  const walk = { path: [], wait: 2.5, phase: 0, heading: 0.6 };
+  // a spot on the camp side of a building, so the explorer stands beside it rather than inside it
+  // rough size of each building, so the explorer can walk around them
+  const BIG = { 'v4-cave': 6.5, 'v4-field': 6, 'v4-circle': 5, 'v4-roundhouse': 5, 'v4-stonehouse': 4.5, 'v5-culture': 6, 'v5-hospital': 4.5,
+    'v5-billabong': 5, 'v5-kangaroo': 5.5, 'v6-crystals': 4.5, 'v6-vault': 4.5, 'v6-tunnel': 5, 'v6-minecart': 6, 'v6-fossils': 4.5, 'v4-campfire': 2.4, 'v4-loom': 4.6, 'v4-bronze': 4 };
+  const sizeOf = (id) => BIG[id] || 3.5;
+  function obstacles(exceptId) {
+    const out = [];
+    for (const id of builds.keys()) {
+      if (id === exceptId || (world.noMarker || []).includes(id)) continue;
+      const def = world.buildings.find((x) => x.id === id);
+      if (def && def.pos[1] > -24) out.push({ x: def.pos[0], z: def.pos[1], r: sizeOf(id) });
+    }
+    return out;
+  }
+  function spotNear(def) {
+    const [x, z] = def.pos;
+    const len = Math.hypot(x, z);
+    const r = sizeOf(def.id) + 1.3;
+    if (len < 1) return { at: [x + r * 0.7, z + r * 0.7], id: def.id };
+    return { at: [x - (x / len) * r, z - (z / len) * r], id: def.id };
+  }
+  function spots() {
+    const list = [{ at: home, id: null }];
+    for (const id of builds.keys()) {
+      const def = world.buildings.find((x) => x.id === id);
+      if (def && !(world.noMarker || []).includes(id)) list.push(spotNear(def));
+    }
+    return list;
+  }
+  function goTo(spot) {
+    walk.path = [spot.at];
+    walk.targetId = spot.id;
+    walk.wait = 0; walk.stuck = 0; walk.best = Infinity;
+  }
+  function wander() {
+    const options = spots().filter((p) => Math.hypot(p.at[0] - me.position.x, p.at[1] - me.position.z) > 2.5);
+    if (options.length) goTo(options[Math.floor(Math.random() * options.length)]);
+  }
+  function stepWalker(dt, t) {
+    const limbs = me.userData.limbs;
+    if (walk.wait > 0 || !walk.path.length) {
+      walk.wait -= dt;
+      if (walk.wait <= 0 && !walk.path.length) wander();
+      // stand still and look around
+      limbs.legs.forEach((l) => { l.rotation.x *= 0.8; });
+      limbs.arms.forEach((a, i) => { if (!(i === 0 && limbs.toolArm)) a.rotation.x *= 0.8; });
+      me.rotation.y = walk.heading + Math.sin(t * 0.7) * 0.3;
+      return;
+    }
+    const [tx, tz] = walk.path[0];
+    let dx = tx - me.position.x, dz = tz - me.position.z;
+    const dist = Math.hypot(dx, dz);
+    // arrived — or close enough and not getting any closer
+    if (dist < walk.best - 0.05) { walk.best = dist; walk.stuck = 0; } else walk.stuck += dt;
+    if (dist < 0.3 || (walk.stuck > 1.2 && dist < 3)) {
+      walk.path.shift();
+      if (!walk.path.length) walk.wait = 2.5 + Math.random() * 3; // pause for a look
+      return;
+    }
+    if (walk.stuck > 3) { walk.path = []; walk.wait = 0.5; return; } // give up and pick somewhere else
+    // head for the target, steering around any buildings in the way
+    let vx = dx / dist, vz = dz / dist;
+    for (const o of obstacles(null)) {
+      const ox = me.position.x - o.x, oz = me.position.z - o.z;
+      const d = Math.hypot(ox, oz), reach = o.r + 1.2;
+      if (d < reach && d > 0.01) {
+        const push = ((reach - d) / 1.2) * 2.4; // strong near the building's edge
+        vx += (ox / d) * push; vz += (oz / d) * push;
+        // slide sideways around the obstacle rather than stopping dead
+        const side = (ox * dz - oz * dx) > 0 ? 1 : -1;
+        vx += (-oz / d) * side * push * 0.8; vz += (ox / d) * side * push * 0.8;
+      }
+    }
+    const vl = Math.hypot(vx, vz) || 1;
+    vx /= vl; vz /= vl;
+    const step = Math.min(dist, 3.2 * dt);
+    me.position.x += vx * step;
+    me.position.z += vz * step;
+    dx = vx; dz = vz;
+    // turn smoothly towards where we're going (the avatar faces +z)
+    const want = Math.atan2(dx, dz);
+    let diff = want - walk.heading;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    walk.heading += diff * Math.min(1, dt * 8);
+    me.rotation.y = walk.heading;
+    // swing arms and legs
+    walk.phase += dt * 9;
+    const swing = Math.sin(walk.phase) * 0.7;
+    limbs.legs[0].rotation.x = swing; limbs.legs[1].rotation.x = -swing;
+    if (!limbs.toolArm) limbs.arms[0].rotation.x = -swing * 0.8;
+    limbs.arms[1].rotation.x = swing * 0.8;
+  }
+
   // building plots that can be built next are marked with stakes
   const markers = new THREE.Group(); scene.add(markers);
   function drawMarkers(available) {
@@ -352,10 +449,12 @@ export function createVillageView(container, { world, owned, avatar, onPick }) {
   }
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
 
-  let raf = 0;
+  if (me && new URLSearchParams(location.search).has('dev')) window.__village = { me, obstacles: () => obstacles(null) }; // test hook
+  let raf = 0, lastT = performance.now() / 1000;
   function loop() {
     raf = requestAnimationFrame(loop);
     const t = performance.now() / 1000;
+    const dt = Math.min(0.1, t - lastT); lastT = t;
     anims.forEach((fn) => fn(t));
     for (const g of builds.values()) {
       if (g.userData.popStart) {
@@ -365,14 +464,19 @@ export function createVillageView(container, { world, owned, avatar, onPick }) {
         if (k >= 1) { g.scale.setScalar(1); delete g.userData.popStart; }
       }
     }
-    if (me) me.rotation.y = 0.6 + Math.sin(t * 0.5) * 0.35; // look around gently
+    if (me) stepWalker(dt, t);
     controls.update();
     renderer.render(scene, camera);
   }
   loop();
 
   return {
-    build(id) { addBuilding(id, true); },
+    build(id) {
+      addBuilding(id, true);
+      // walk over to admire the new building
+      const def = world.buildings.find((x) => x.id === id);
+      if (me && def && !(world.noMarker || []).includes(id)) setTimeout(() => goTo(spotNear(def)), 600);
+    },
     markers: drawMarkers,
     focus(id) {
       const def = world.buildings.find((x) => x.id === id);

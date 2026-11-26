@@ -96,6 +96,7 @@ export function villageScreen(year) {
     render();
     const eraAfter = currentEra(world, owned());
     setTimeout(() => {
+      if (!location.hash.startsWith('#/village')) return; // student has left the page
       factCard(world, def, true);
       if (eraAfter > eraBefore) setTimeout(() => toast(world.year === 4 ? `🎉 A new era begins: the ${ERAS[eraAfter].name}!` : `🎉 New stage unlocked: ${ERAS[eraAfter].name}!`, 'good'), 400);
     }, 750);

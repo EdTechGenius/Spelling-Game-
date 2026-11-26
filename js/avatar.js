@@ -123,20 +123,23 @@ export function buildAvatar(cfg) {
   const longSleeves = a.sleeves === 'long' || a.outfit === 'mammoth-cloak' || a.outfit === 'lab-coat';
   if (a.outfit === 'fur-tunic') sleeveMat = mat(skin);
 
-  // Legs (0..12), body (12..24), head (24..32)
+  // Legs (0..12), body (12..24), head (24..32). Each leg hangs from a hip joint so it can swing when walking.
+  const legs = [];
   for (const x of [-2, 2]) {
-    const legLen = 12;
+    const hip = new THREE.Group();
+    hip.position.set(x, 12, 0);
+    root.add(hip);
     if (a.bottom === 'shorts') {
-      box(4, 5, 4, bottomColour, x, 9.5, 0, root);
-      box(4, 5, 4, skin, x, 4.5, 0, root);
+      box(4, 5, 4, bottomColour, 0, -2.5, 0, hip);
+      box(4, 5, 4, skin, 0, -7.5, 0, hip);
     } else if (a.bottom === 'skirt') {
-      box(4, 10, 4, skin, x, 7, 0, root);
+      box(4, 10, 4, skin, 0, -5, 0, hip);
     } else {
-      box(4, 10, 4, a.bottom === 'joggers' ? shade(bottomColour, 0.05) : bottomColour, x, 7, 0, root);
-      if (a.bottom === 'joggers') box(4.2, 1, 4.2, shade(bottomColour, -0.1), x, 2.5, 0, root);
+      box(4, 10, 4, a.bottom === 'joggers' ? shade(bottomColour, 0.05) : bottomColour, 0, -5, 0, hip);
+      if (a.bottom === 'joggers') box(4.2, 1, 4.2, shade(bottomColour, -0.1), 0, -9.5, 0, hip);
     }
-    box(4.2, 2, 4.6, a.shoes, x, 1, 0.2, root); // shoes
-    void legLen;
+    box(4.2, 2, 4.6, a.shoes, 0, -11, 0.2, hip); // shoes
+    legs.push(hip);
   }
   if (a.bottom === 'skirt') box(9, 5, 5, bottomColour, 0, 10.5, 0, root);
 
@@ -211,6 +214,7 @@ export function buildAvatar(cfg) {
   if (a.tool === 'compass') box(2.6, 0.8, 2.6, '#c9a227', 0, -12, 2, hand);
   if (a.tool === 'pickaxe') { box(1, 12, 1, '#8a5a34', 0, -11, 3, hand); box(1, 1.4, 8, '#5fd3e8', 0, -5.6, 3, hand); }
 
+  root.userData.limbs = { legs, arms, toolArm: !!a.tool };
   root.position.y = -16;
   return root;
 }
