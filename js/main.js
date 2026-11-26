@@ -4,6 +4,7 @@ import { worldsScreen, worldScreen, zoneScreen, listScreen, notebookScreen, shop
 import { learnScreen, practiseScreen, challengeScreen, checkScreen } from './screens/play.js';
 import { teacherScreen } from './screens/teacher.js';
 import { villageScreen } from './screens/village.js';
+import { introScreen } from './screens/intro.js';
 
 let cleanup = null;
 export function onLeave(fn) { cleanup = fn; }
@@ -15,7 +16,7 @@ export function go(path) {
 
 function route() {
   if (cleanup) { try { cleanup(); } catch {} cleanup = null; }
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   const [page, a, b] = parts;
   const signedIn = store.user || store.guest;
@@ -33,6 +34,7 @@ function route() {
     case 'world': return worldScreen(Number(a));
     case 'zone': return zoneScreen(a);
     case 'list': return listScreen(a, Number(b));
+    case 'intro': return introScreen(a);
     case 'learn': return learnScreen(a);
     case 'practise': return practiseScreen(a, b);
     case 'challenge': return challengeScreen(a);

@@ -2,6 +2,7 @@ import { h, mount, toast, confetti, modal } from '../ui.js';
 import { store, profile, classFor, refreshClasses, zone as zoneProgress, notebookAll, notebookEntry, buyItem, saveProfile, signOut } from '../store.js';
 import { WORLDS, BASE_CAMP, findZone, patternSpan } from '../worlds.js';
 import { info } from '../data/details.js';
+import { RULES, shortRule } from '../data/rules.js';
 import { speak } from '../speech.js';
 import { avatarThumbnail, SHOP, DEFAULT_AVATAR } from '../avatar.js';
 import { CHECK_DELAY_DAYS } from '../config.js';
@@ -163,6 +164,8 @@ export function zoneScreen(key) {
   const { zone: z, world: w, kind } = found;
   if (kind === 'zone' && !isUnlocked(w, z)) { toast('This zone is still locked 🔒'); return go(`/world/${w.year}`); }
   const prog = zoneProgress(key);
+  // Every zone starts with its spelling-rule introduction (no skipping)
+  if (!prog.intro) { location.replace(`#/intro/${key}`); return; }
   const due = dueForCheck(key).length;
   const waiting = notebookAll().filter((e) => e.zone === key && e.status === 'pending').length - dueForCheck(key).filter((e) => e.status === 'pending').length;
   const back = kind === 'zone' ? `/world/${w.year}` : kind === 'expedition' ? `/list/expedition/${w.year}` : '/list/basecamp/0';
@@ -177,6 +180,7 @@ export function zoneScreen(key) {
       h('div', { class: 'zone-head' },
         h('div', { class: 'zone-num' }, kind === 'basecamp' ? '🏕️' : kind === 'expedition' ? '⭐' : z.num),
         h('div', {}, h('h2', {}, z.name), h('div', { class: 'pattern-tag' }, kind === 'zone' ? `Spelling focus: ${z.title}` : z.title)),
+        h('button', { class: 'btn btn-small btn-ghost rule-replay', onclick: () => go(`/intro/${key}`) }, '📜 Spelling rule'),
         h('div', { class: 'zone-stars' }, starsText(prog.stars))),
       h('div', { class: 'steps' },
         step(1, '📖', 'Learn', 'Hear, see and try each word', prog.learn ? '✔ done' : '', () => go(`/learn/${key}`), prog.learn ? 'complete' : ''),
@@ -209,6 +213,7 @@ export function wordCard(it, z) {
       h('button', { class: 'btn btn-small', onclick: () => speak(it.w) }, '🔊 Say it'),
       h('button', { class: 'btn btn-small btn-ghost', onclick: () => speak(it.w, { slow: true }) }, '🐢 Slowly')),
     it.hint && h('p', { class: 'hint' }, it.hint.startsWith('plural') ? it.hint : `Short for “${it.hint}”`),
+    RULES[z.key] && h('p', { class: 'wc-rule' }, '📜 ', h('b', {}, 'Rule: '), shortRule(RULES[z.key].rule)),
     d ? h('div', {},
       h('h4', {}, '📘 Meaning'), h('p', { class: 'wc-text' }, d.meaning),
       h('h4', {}, '💬 In a sentence'), h('p', { class: 'wc-text sentence' }, d.sentence,

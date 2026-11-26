@@ -90,7 +90,7 @@ async function pullFromServer() {
     gems: p.data.gems, owned: p.data.owned_items || [],
   };
   s.zones = {};
-  for (const r of z.data || []) s.zones[r.zone_key] = { learn: r.learn_done, practise: r.practise_count, stars: r.best_stars, check: r.check_done };
+  for (const r of z.data || []) s.zones[r.zone_key] = { intro: r.intro_done, learn: r.learn_done, practise: r.practise_count, stars: r.best_stars, check: r.check_done };
   s.notebook = {};
   for (const r of n.data || []) s.notebook[`${r.zone_key}|${r.word}`] = { status: r.status, passedAt: r.challenge_passed_at, masteredAt: r.mastered_at };
   s.classes = (c.data || []).map((r) => r.classes).filter(Boolean);
@@ -171,7 +171,7 @@ export async function buyItem(id, cost) {
 // ───────── Zone progress ─────────
 
 export function zone(key) {
-  return store.state.zones[key] || { learn: false, practise: 0, stars: 0, check: false };
+  return { intro: false, learn: false, practise: 0, stars: 0, check: false, ...(store.state.zones[key] || {}) };
 }
 
 export async function updateZone(key, patch) {
@@ -181,7 +181,7 @@ export async function updateZone(key, patch) {
   saveLocal();
   if (!online()) return;
   await sb.from('zone_progress').upsert({
-    student_id: store.user.id, zone_key: key, learn_done: z.learn, practise_count: z.practise,
+    student_id: store.user.id, zone_key: key, intro_done: !!z.intro, learn_done: z.learn, practise_count: z.practise,
     best_stars: z.stars, check_done: z.check, updated_at: new Date().toISOString(),
   }).then(warn('zone'));
 }
