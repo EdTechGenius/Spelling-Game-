@@ -80,7 +80,7 @@ async function pullFromServer() {
     sb.from('profiles').select('*').eq('id', uid).single(),
     sb.from('zone_progress').select('*').eq('student_id', uid),
     sb.from('notebook').select('*').eq('student_id', uid),
-    sb.from('class_members').select('class_id, classes(id, name, year_group, join_code)').eq('student_id', uid),
+    sb.from('class_members').select('class_id, classes(id, name, year_group, join_code, open_zones, current_zone)').eq('student_id', uid),
   ]);
   if (p.error) { console.warn('profile', p.error.message); return; }
   const s = store.state;
@@ -100,6 +100,25 @@ async function pullFromServer() {
 // ───────── Profile ─────────
 
 export function profile() { return store.state.profile; }
+
+// The student's class for a given year group (teachers choose which zones are open)
+export function classFor(year) {
+  if (store.state.profile.role === 'teacher') return null;
+  return store.state.classes.find((c) => c.year_group === year) || null;
+}
+
+// Re-check the class's open zones (teachers may have unlocked a new one). Returns true if anything changed.
+export async function refreshClasses() {
+  if (!store.user) return false;
+  const { data, error } = await sb.from('class_members')
+    .select('classes(id, name, year_group, join_code, open_zones, current_zone)').eq('student_id', store.user.id);
+  if (error) return false;
+  const next = (data || []).map((r) => r.classes).filter(Boolean);
+  const changed = JSON.stringify(next) !== JSON.stringify(store.state.classes);
+  store.state.classes = next;
+  saveLocal();
+  return changed;
+}
 
 export async function saveProfile(patch) {
   Object.assign(store.state.profile, patch);

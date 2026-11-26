@@ -4,7 +4,7 @@ import { info } from '../data/details.js';
 import { findZone, patternSpan, misspellings, missingChallenge } from '../worlds.js';
 import { profile, zone as zoneProgress, updateZone, addGems, setNotebook, notebookEntry, logAttempt } from '../store.js';
 import { CHALLENGE_SIZE, PRACTISE_SIZE } from '../config.js';
-import { topBar, dueForCheck, GAMES } from './map.js';
+import { topBar, dueForCheck, GAMES, isUnlocked } from './map.js';
 import { go, onLeave } from '../main.js';
 
 const DEV = new URLSearchParams(location.search).has('dev');
@@ -488,7 +488,8 @@ export function challengeScreen(key) {
       bumpGems(gems);
       if (stars) confetti(stars * 25);
       const nextZone = kind === 'zone' && w.zones[z.num];
-      const unlocked = stars > 0 && before === 0 && nextZone;
+      // only say a new zone unlocked if it really is open now (class zones are opened by the teacher)
+      const unlocked = stars > 0 && before === 0 && nextZone && isUnlocked(w, nextZone);
       d.stage.replaceChildren(h('div', { class: 'result' },
         h('div', { class: `gate ${stars ? 'open' : ''}` }, h('div', { class: 'gate-door l' }), h('div', { class: 'gate-door r' }), h('span', { class: 'gate-lock' }, stars ? '💎' : '🔒')),
         h('div', { class: 'result-stars' }, [0, 1, 2].map((i) => h('span', { class: i < stars ? 'on' : '' }, '★'))),

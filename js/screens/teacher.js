@@ -86,7 +86,7 @@ async function classView(classId) {
   const topWrong = Object.entries(wrongWords).sort((a, b) => b[1] - a[1]).slice(0, 15);
 
   const table = h('div', { class: 'heat-wrap' }, h('table', { class: 'heat' },
-    h('thead', {}, h('tr', {}, h('th', {}, 'Student'), world.zones.map((z) => h('th', { title: `${z.name} — ${z.title}` }, z.num)),
+    h('thead', {}, h('tr', {}, h('th', {}, 'Student'), world.zones.map((z) => h('th', { class: z.key === cls.current_zone ? 'this-week' : (cls.open_zones || []).includes(z.key) ? '' : 'closed', title: `${z.name} — ${z.title}` }, z.num)),
       h('th', {}, '📓'), h('th', {}, '🔧'), h('th', {}, '💎'), h('th', {}, 'Last active'))),
     h('tbody', {}, students.length ? students.map((s) => h('tr', {},
       h('td', { class: 'stu' }, h('img', { src: avatarThumbnail({ ...DEFAULT_AVATAR, ...(s.avatar || {}) }, 64), alt: '' }), s.display_name),
@@ -109,6 +109,7 @@ async function classView(classId) {
     h('div', { class: 'nav-row left' },
       h('button', { class: 'btn btn-ghost', onclick: csv }, '⬇️ Download spreadsheet'),
       h('button', { class: 'btn btn-ghost', onclick: () => manage(cls, students) }, '👥 Manage students')),
+    zonePanel(cls, world, () => classView(cls.id)),
     h('h3', { class: 'section-title' }, 'Progress by zone (best stars)'),
     table,
     h('h3', { class: 'section-title' }, 'Most misspelt words (last 30 days)'),
@@ -118,6 +119,41 @@ async function classView(classId) {
     })) : h('p', { class: 'muted' }, 'Nothing yet — data appears as students play.'),
   );
   void findZone;
+}
+
+// Teachers open zones for the whole class and choose the zone of the week
+function zonePanel(cls, world, refresh) {
+  const open = new Set(cls.open_zones || []);
+  const nextLocked = world.zones.find((z) => !open.has(z.key));
+  const save = async (zones, current) => {
+    const { error } = await sb.from('classes').update({ open_zones: zones, current_zone: current }).eq('id', cls.id);
+    if (error) { toast(error.message, 'bad'); return; }
+    refresh();
+  };
+  const ordered = (set) => world.zones.map((z) => z.key).filter((k) => set.has(k));
+  return h('div', { class: 'zone-panel' },
+    h('div', { class: 'nb-head' },
+      h('h3', { class: 'section-title' }, '🗺️ Zones open for this class'),
+      nextLocked && h('button', { class: 'btn', onclick: () => {
+        if (!confirm(`Unlock Zone ${nextLocked.num}: ${nextLocked.name} (${nextLocked.title}) for the whole class and make it the zone of the week?`)) return;
+        save([...ordered(open), nextLocked.key], nextLocked.key);
+      } }, `🔓 Unlock next: Zone ${nextLocked.num} ▶`)),
+    h('p', { class: 'muted small' }, 'Students can only play the zones you open. Open zones stay available for revision. ⭐ marks the zone of the week on everyone\'s map. Expedition and Base Camp are always open.'),
+    h('div', { class: 'zone-toggles' }, world.zones.map((z) => {
+      const isOpen = open.has(z.key);
+      const isCurrent = cls.current_zone === z.key;
+      return h('div', { class: `zone-toggle ${isOpen ? 'open' : ''} ${isCurrent ? 'current' : ''}` },
+        h('div', { class: 'zt-head' }, h('b', {}, z.num), h('span', {}, isCurrent ? '⭐' : isOpen ? '🔓' : '🔒')),
+        h('div', { class: 'zt-name' }, z.name), h('small', { class: 'muted' }, z.title),
+        h('div', { class: 'zt-actions' },
+          h('button', { class: 'btn btn-small ' + (isOpen ? 'btn-ghost' : ''), onclick: () => {
+            const next = new Set(open);
+            if (isOpen) next.delete(z.key); else next.add(z.key);
+            const zones = ordered(next);
+            save(zones, isOpen && isCurrent ? (zones[zones.length - 1] || null) : (isOpen ? cls.current_zone : z.key));
+          } }, isOpen ? 'Lock' : 'Open'),
+          isOpen && !isCurrent && h('button', { class: 'btn btn-small btn-ghost', title: 'Make this the zone of the week', onclick: () => save(ordered(open), z.key) }, '⭐')));
+    })));
 }
 
 function manage(cls, students) {
