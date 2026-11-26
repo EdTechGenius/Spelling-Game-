@@ -18,7 +18,7 @@ export const WORLDS = {
   6: {
     year: 6, name: 'Volcano Depths', short: 'Volcano', icon: '🌋',
     blurb: 'Volcanoes, sky islands and caves. Mine gems and build your secret underground lair!',
-    theme: { sky: '#3a2f4f', ground: '#5b4a5e', ground2: '#4a3b4d', path: '#d8743a', accent: '#ff7b2e' },
+    theme: { panel: '#ffe9db', sky: '#3a2f4f', ground: '#5b4a5e', ground2: '#4a3b4d', path: '#d8743a', accent: '#ff7b2e' },
     zones: LISTS.y6, expedition: LISTS.s56,
     deco: ['🌋', '💎', '🪨', '🔥', '⛰️', '🦇', '💎', '🪨', '🌋', '🔥'],
   },

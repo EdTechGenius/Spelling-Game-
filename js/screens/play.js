@@ -27,7 +27,7 @@ function shell(key, title, ...content) {
   const { zone: z, world: w } = findZone(key);
   const theme = w ? w.theme : { accent: '#2f8fdd', sky: '#dff1ff' };
   mount(topBar(h('div', { class: 'crumb' }, h('button', { class: 'btn btn-small btn-ghost', onclick: () => go(`/zone/${key}`) }, '◀ Zone'))),
-    h('main', { class: 'page play-page', style: { '--accent': theme.accent, '--sky': theme.sky } },
+    h('main', { class: 'page play-page', style: { '--accent': theme.accent, '--sky': theme.panel || theme.sky } },
       h('div', { class: 'play-head' }, h('h2', {}, title), h('span', { class: 'muted' }, `${z.name} · ${z.title}`)),
       ...content));
 }

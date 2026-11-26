@@ -161,7 +161,7 @@ export function zoneScreen(key) {
       h('b', {}, title), h('small', {}, desc), status && h('span', { class: 'step-status' }, status));
 
   mount(topBar(h('div', { class: 'crumb' }, h('button', { class: 'btn btn-small btn-ghost', onclick: () => go(back) }, '◀ Map'))),
-    h('main', { class: 'page zone-page', style: { '--accent': theme.accent, '--sky': theme.sky } },
+    h('main', { class: 'page zone-page', style: { '--accent': theme.accent, '--sky': theme.panel || theme.sky } },
       h('div', { class: 'zone-head' },
         h('div', { class: 'zone-num' }, kind === 'basecamp' ? '🏕️' : kind === 'expedition' ? '⭐' : z.num),
         h('div', {}, h('h2', {}, z.name), h('div', { class: 'pattern-tag' }, kind === 'zone' ? `Spelling focus: ${z.title}` : z.title)),

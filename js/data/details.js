@@ -5,6 +5,9 @@
 // • Teachers: please check these and change anything you like.
 // Words without an entry still work — the game just reads the word on its own.
 
+import { Y5 } from './details-y5.js';
+import { Y6 } from './details-y6.js';
+
 const D = {
   // ───────── Year 4 · Zone 1: ph ─────────
   alphabet: ['noun', 'The set of letters used to write a language, arranged in a fixed order from A to Z.', 'There are twenty-six letters in the English alphabet, but Russian uses a different alphabet with thirty-three.', '🔤'],
@@ -328,11 +331,13 @@ const D = {
 };
 
 // Lookup used everywhere in the game
+const ALL = { ...D, ...Y5, ...Y6 };
+
 export function info(word) {
   if (!word) return null;
-  const d = D[word] || D[word.toLowerCase()];
+  const d = ALL[word] || ALL[word.toLowerCase()];
   if (!d) return null;
   return { cls: d[0], meaning: d[1], sentence: d[2], emoji: d[3] };
 }
 
-export const DETAILS = D;
+export const DETAILS = ALL;
