@@ -65,16 +65,23 @@ export function learnScreen(key) {
     let input, tries = 0;
     const feedback = h('div', { class: 'feedback' });
     const wordBox = h('div', { class: 'word-box' }, highlighted(it.w, z));
+    const sentText = h('span', {}, d ? d.sentence : '');
+    const sentEl = d ? h('div', { class: 'sentence' }, '💬 ', sentText) : null;
+    // covering the word also hides it inside the example sentence
+    const cover = (on) => {
+      wordBox.classList.toggle('covered', on);
+      if (d) sentText.textContent = on ? (blankedSentence(it) || d.sentence) : d.sentence;
+    };
     const nextBtn = i < z.words.length - 1 ?
       h('button', { class: 'btn', disabled: done ? null : true, onclick: () => { i++; render(); } }, 'Next ▶') :
       h('button', { class: 'btn', disabled: done ? null : true, onclick: finish }, 'Finish ✔');
     const lockMsg = h('div', { class: `lock-msg ${done ? 'hidden' : ''}` }, '🔒 Spell the word correctly to unlock Next');
     const peekBtn = h('button', { class: 'btn btn-small btn-ghost hidden', type: 'button', onclick: () => {
-      wordBox.classList.remove('covered');
-      setTimeout(() => { wordBox.classList.add('covered'); input.focus(); }, 2500);
+      cover(false);
+      setTimeout(() => { cover(true); input.focus(); }, 2500);
     } }, '👀 Peek for 2 seconds');
     const coverBtn = h('button', { class: 'btn btn-big-ghost', onclick: () => {
-      wordBox.classList.add('covered'); tryArea.classList.remove('hidden'); coverBtn.classList.add('hidden');
+      cover(true); tryArea.classList.remove('hidden'); coverBtn.classList.add('hidden');
       feedback.replaceChildren(); input.value = ''; input.focus();
     } }, '🙈 Cover it and write it');
     const tryArea = h('div', { class: 'try-area hidden' },
@@ -86,7 +93,7 @@ export function learnScreen(key) {
         logAttempt(key, it.w, input.value, ok, 'learn');
         if (ok) {
           passed.add(i);
-          wordBox.classList.remove('covered');
+          cover(false);
           feedback.replaceChildren(h('span', { class: 'good' }, '✔ Perfect! Next is unlocked.'));
           nextBtn.disabled = false; lockMsg.classList.add('hidden'); peekBtn.classList.add('hidden');
           input.disabled = true;
@@ -109,7 +116,7 @@ export function learnScreen(key) {
       d?.cls && h('div', { class: 'word-class' }, d.cls),
       it.hint && h('div', { class: 'hint' }, it.hint.startsWith('plural') ? it.hint : `short for “${it.hint}”`),
       d && h('div', { class: 'meaning' }, h('b', {}, 'Meaning: '), d.meaning),
-      d && h('div', { class: 'sentence' }, '💬 ', d.sentence),
+      sentEl,
       h('div', { class: 'audio-row' },
         h('button', { class: 'btn btn-round', title: 'Hear the word', onclick: () => speak(it.w) }, '🔊'),
         h('button', { class: 'btn btn-round', title: 'Hear it slowly', onclick: () => speak(it.w, { slow: true }) }, '🐢'),
