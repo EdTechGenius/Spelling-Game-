@@ -268,8 +268,9 @@ export function createVillageView(container, { world, owned, avatar, onPick }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(world.sky);
   scene.fog = new THREE.Fog(world.sky, 70, 130);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x6b8f4e, 1.3));
-  const sun = new THREE.DirectionalLight(0xfff1d6, 1.6);
+  const L = world.lighting || {};
+  scene.add(new THREE.HemisphereLight(L.sky ?? 0xffffff, L.ground ?? 0x6b8f4e, L.hemi ?? 1.3));
+  const sun = new THREE.DirectionalLight(L.sunColor ?? 0xfff1d6, L.sun ?? 1.6);
   sun.position.set(25, 40, 20); sun.castShadow = true;
   Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40 });
   sun.shadow.mapSize.set(1024, 1024);
@@ -285,6 +286,7 @@ export function createVillageView(container, { world, owned, avatar, onPick }) {
   controls.enablePan = false;
 
   world.scenery(scene);
+  if (world.fogNear) scene.fog = new THREE.Fog(world.sky, world.fogNear, world.fogFar);
 
   const builds = new Map(); // id -> group
   const anims = [];

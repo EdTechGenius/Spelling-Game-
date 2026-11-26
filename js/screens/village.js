@@ -2,8 +2,9 @@ import { h, mount, toast, confetti, modal } from '../ui.js';
 import { profile, buyItem } from '../store.js';
 import { STONE_AGE, eraUnlocked, currentEra, createVillageView } from '../village.js';
 import { OUTBACK } from '../sanctuary.js';
+import { VOLCANO } from '../lair.js';
 
-export const VILLAGES = { 4: STONE_AGE, 5: OUTBACK };
+export const VILLAGES = { 4: STONE_AGE, 5: OUTBACK, 6: VOLCANO };
 import { DEFAULT_AVATAR } from '../avatar.js';
 import { speak } from '../speech.js';
 import { topBar } from './map.js';
