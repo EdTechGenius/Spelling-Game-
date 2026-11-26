@@ -1,6 +1,8 @@
 import { h, mount, toast, confetti, modal } from '../ui.js';
 import { store, profile, zone as zoneProgress, notebookAll, notebookEntry, buyItem, saveProfile, signOut } from '../store.js';
-import { WORLDS, BASE_CAMP, findZone } from '../worlds.js';
+import { WORLDS, BASE_CAMP, findZone, patternSpan } from '../worlds.js';
+import { info } from '../data/details.js';
+import { speak } from '../speech.js';
 import { avatarThumbnail, SHOP, DEFAULT_AVATAR } from '../avatar.js';
 import { CHECK_DELAY_DAYS } from '../config.js';
 import { go } from '../main.js';
@@ -136,10 +138,11 @@ export function worldScreen(year) {
 // ───────── a zone (Learn → Practise → Challenge → Check) ─────────
 
 export const GAMES = [
-  { id: 'builder', name: 'Block Builder', icon: '🧱', desc: 'Tap the letter blocks in order.' },
+  { id: 'builder', name: 'Block Builder', icon: '🧱', desc: 'Listen and build the word — avoid the extra blocks!' },
   { id: 'missing', name: 'Missing Pieces', icon: '🧩', desc: 'Choose the missing letters.' },
   { id: 'glitch', name: 'Spot the Glitch', icon: '👾', desc: 'Find the correct spelling.' },
-  { id: 'craft', name: 'Crafting Table', icon: '🛠️', desc: 'Unscramble the letters.' },
+  { id: 'detective', name: 'Sentence Detective', icon: '🔎', desc: 'Read the clue and find the missing word.' },
+  { id: 'pyramid', name: 'Pyramid Builder', icon: '🔺', desc: 'Build the word one letter at a time.' },
   { id: 'speed', name: 'Speed Run', icon: '⏱️', desc: 'Spell as many as you can in 60 seconds.' },
 ];
 
@@ -170,14 +173,36 @@ export function zoneScreen(key) {
         step(4, '🔍', 'Check', due ? `${due} words ready to check!` : waiting > 0 ? `${waiting} words come back in ${CHECK_DELAY_DAYS} days` : 'Pass the Challenge first',
           prog.check ? '✔ done' : '', () => due ? go(`/check/${key}`) : toast(waiting > 0 ? 'Your words are resting. Come back in a couple of days to check them! ⏳' : 'Pass the Challenge Gate first 🚪'),
           `${prog.check ? 'complete' : ''} ${due ? 'ready' : 'waiting'}`)),
-      h('h3', { class: 'section-title' }, 'Words in this zone'),
+      h('h3', { class: 'section-title' }, 'Words in this zone ', h('small', { class: 'muted' }, '— tap a word to see what it means')),
       h('div', { class: 'word-chips' }, z.words.map((it) => {
         const e = notebookEntry(key, it.w);
         const icon = !e ? '' : e.status === 'mastered' ? '✅' : e.status === 'tricky' ? '🔧' : '⏳';
-        return h('span', { class: `chip ${e ? e.status : ''}` }, icon && h('span', {}, icon + ' '), it.w);
+        return h('button', { class: `chip chip-btn ${e ? e.status : ''}`, onclick: () => wordCard(it, z) }, icon && h('span', {}, icon + ' '), it.w);
       })),
       h('p', { class: 'muted small legend' }, '⏳ passed the Challenge, waiting for Check · ✅ in your notebook · 🔧 tricky — keep practising'),
     ));
+}
+
+// Pop-up card for one word: picture, word class, meaning, example sentence and audio
+export function wordCard(it, z) {
+  const d = info(it.w);
+  const span = patternSpan(it.w, z.pattern);
+  const word = span ? h('span', {}, it.w.slice(0, span[0]), h('mark', {}, it.w.slice(span[0], span[1])), it.w.slice(span[1])) : it.w;
+  speak(it.w);
+  modal(h('div', { class: 'word-card' },
+    h('div', { class: 'wc-picture' }, d?.emoji || '📖'),
+    h('div', { class: 'big-word' }, word),
+    h('div', { class: 'wc-meta' },
+      d?.cls && h('span', { class: 'word-class' }, d.cls),
+      h('button', { class: 'btn btn-small', onclick: () => speak(it.w) }, '🔊 Say it'),
+      h('button', { class: 'btn btn-small btn-ghost', onclick: () => speak(it.w, { slow: true }) }, '🐢 Slowly')),
+    it.hint && h('p', { class: 'hint' }, it.hint.startsWith('plural') ? it.hint : `Short for “${it.hint}”`),
+    d ? h('div', {},
+      h('h4', {}, '📘 Meaning'), h('p', { class: 'wc-text' }, d.meaning),
+      h('h4', {}, '💬 In a sentence'), h('p', { class: 'wc-text sentence' }, d.sentence,
+        ' ', h('button', { class: 'btn btn-small btn-ghost', onclick: () => speak(d.sentence) }, '🔊'))) :
+      h('p', { class: 'muted' }, 'The meaning for this word is coming soon. Tap 🔊 to hear it.'),
+  ));
 }
 
 function pickGame(key) {
